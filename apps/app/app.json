@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "Pramonit",
+    "slug": "pramonit",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "pramonit",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#080C0A",
+    "ios": {
+      "bundleIdentifier": "com.pramonit.app",
+      "supportsTablet": true,
+      "icon": "./assets/expo.icon"
+    },
+    "android": {
+      "package": "com.pramonit.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#080C0A",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "single",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-video",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Pramonit needs access to your videos so you can submit training clips.",
+          "cameraPermission": "Pramonit needs the camera so you can film your training."
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#080C0A",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 76
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false,
+      "reactCompiler": true
+    }
+  }
+}

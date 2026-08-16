@@ -1,0 +1,37 @@
+# ---- secrets ----
+.env
+.env.local
+.env.*.local
+*.pem
+
+# ---- python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# ---- node / expo ----
+node_modules/
+.expo/
+.expo-shared/
+dist/
+web-build/
+*.tsbuildinfo
+
+# ---- uploaded media (dev local storage) ----
+apps/api/media/
+
+# ---- editors / os ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+video/
+apps/app/test-results/
+apps/app/playwright-report/

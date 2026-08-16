@@ -1,0 +1,61 @@
+# Render Blueprint — deploys the API straight from apps/api/Dockerfile.
+#
+# Render → New → Blueprint → connect the PRAMONIT repo → it reads this file.
+# Every secret is marked `sync: false`, meaning Render prompts you for it in the
+# dashboard and it is never stored in git.
+#
+# Note on `plan: free`: the container sleeps after 15 minutes idle and takes
+# ~50s to wake. Change to `starter` ($7/mo) when cold starts start to bite.
+
+services:
+  - type: web
+    name: pramonit-api
+    runtime: docker
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: ./apps/api
+    plan: free
+    region: singapore          # nearest Render region to Mumbai
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      # ---- you paste these into the Render dashboard once ----
+      - key: DATABASE_URL           # Supabase pooled, :6543
+        sync: false
+      - key: DATABASE_URL_DIRECT    # Supabase direct, :5432 — migrations
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: S3_ENDPOINT_URL
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: CORS_ORIGINS           # https://your-domain.com
+        sync: false
+      - key: PUBLIC_BASE_URL        # https://pramonit-api.onrender.com
+        sync: false
+
+      # ---- fixed, safe to keep in git ----
+      - key: ENV
+        value: prod
+      - key: APP_TIMEZONE
+        value: Asia/Kolkata
+      - key: STORAGE_BACKEND
+        value: s3
+      - key: S3_BUCKET
+        value: pramonit-videos
+      - key: S3_REGION
+        value: auto
+      - key: WEEKLY_REQUIRED_SUBMISSIONS
+        value: 2
+      - key: AUTO_APPROVE_AFTER_HOURS
+        value: 72
+      - key: SWEEPER_INTERVAL_MINUTES
+        value: 15
+      - key: ENABLE_SWEEPER
+        value: true
+      - key: MAX_UPLOAD_MB
+        value: 200
+      - key: PYTHONUNBUFFERED
+        value: 1
