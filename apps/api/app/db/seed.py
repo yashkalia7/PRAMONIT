@@ -423,7 +423,39 @@ async def seed(session, *, rng: random.Random | None = None) -> dict[str, object
     }
 
 
-async def main(reset: bool = False) -> None:
+async def seed_drills_only(session) -> int:
+    """Just the ball-mastery library — the correct seed for production.
+
+    A real academy must not launch carrying twelve fictional students: they would
+    sit on the leaderboard next to real children and skew every batch compliance
+    figure the coach looks at.
+    """
+    existing = set(
+        (await session.execute(select(Drill.slug))).scalars().all()
+    )
+    added = 0
+    for spec in DRILLS:
+        if spec["slug"] in existing:
+            continue
+        session.add(
+            Drill(
+                slug=spec["slug"],
+                title=spec["title"],
+                description=spec["description"],
+                instructions=spec["instructions"],
+                category=DrillCategory.ball_mastery,
+                metric_type=spec["metric_type"],
+                target_value=spec["target_value"],
+                difficulty=spec["difficulty"],
+                is_global=True,
+            )
+        )
+        added += 1
+    await session.commit()
+    return added
+
+
+async def main(reset: bool = False, drills_only: bool = False) -> None:
     from app.db.init_db import create_all, drop_all
     from app.db.session import SessionLocal, backend_name
 
@@ -433,6 +465,13 @@ async def main(reset: bool = False) -> None:
         await drop_all()
         print("dropped existing schema")
     await create_all()
+
+    if drills_only:
+        async with SessionLocal() as session:
+            added = await seed_drills_only(session)
+        print(f"\nseeded {added} global drill(s); no demo accounts created")
+        print("the academy is empty and ready for real coaches to register\n")
+        return
 
     async with SessionLocal() as session:
         if not reset and await _already_seeded(session):
@@ -455,5 +494,10 @@ async def main(reset: bool = False) -> None:
 if __name__ == "__main__":  # pragma: no cover - operator entry point
     parser = argparse.ArgumentParser(description="Seed the Pramonit academy database")
     parser.add_argument("--reset", action="store_true", help="drop and rebuild the schema first")
+    parser.add_argument(
+        "--drills-only",
+        action="store_true",
+        help="production seed: the drill library only, no demo accounts",
+    )
     args = parser.parse_args()
-    asyncio.run(main(reset=args.reset))
+    asyncio.run(main(reset=args.reset, drills_only=args.drills_only))

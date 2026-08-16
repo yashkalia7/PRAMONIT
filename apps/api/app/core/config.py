@@ -7,6 +7,7 @@ Supabase + Cloudflare R2 is an .env edit and nothing else.
 from __future__ import annotations
 
 import ssl
+import uuid
 from functools import lru_cache
 from typing import Any, Literal
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
@@ -121,7 +122,20 @@ def build_async_dsn(raw: str) -> tuple[str, dict[str, Any]]:
 
     is_pooler = ":6543" in parts.netloc or "pooler.supabase" in parts.netloc
     if is_pooler:
+        # Three separate caches have to be defeated to run asyncpg through a
+        # transaction-mode pooler (Supabase's Supavisor, or pgbouncer):
+        #
+        #  1. asyncpg's own statement cache.
         connect_args["statement_cache_size"] = 0
+        #  2. asyncpg names its prepared statements __asyncpg_stmt_1__,
+        #     __asyncpg_stmt_2__ … per connection. The pooler multiplexes many
+        #     client connections onto few server ones, so two clients collide on
+        #     the same name and one gets DuplicatePreparedStatementError. Unique
+        #     names per statement remove the collision entirely.
+        connect_args["prepared_statement_name_func"] = lambda: f"__asyncpg_{uuid.uuid4()}__"
+        #  3. SQLAlchemy's asyncpg dialect keeps its own cache on top, which is
+        #     configured through the URL rather than connect_args.
+        query["prepared_statement_cache_size"] = "0"
 
     dsn = urlunsplit((scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
     return dsn, connect_args
